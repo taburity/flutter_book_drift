@@ -1,20 +1,26 @@
-import 'package:floor/floor.dart';
-import 'note.dart';
+import 'package:drift/drift.dart';
+import 'notes_database.dart';
+import 'notes.dart';
 
-@dao
-abstract class NotesDao {
-  @Query('SELECT * FROM Note')
-  Future<List<Note>> getAllNotes();
+part 'notes_dao.g.dart';
 
-  @Query('SELECT * FROM Note WHERE id = :id')
-  Future<Note?> getNoteById(int id);
+@DriftAccessor(tables: [Notes])
+class NotesDao extends DatabaseAccessor<NotesDatabase> with _$NotesDaoMixin {
+  NotesDao(super.db);
 
-  @insert
-  Future<void> insertNote(Note note);
+  Future<List<Note>> getAllNotes() => select(notes).get();
 
-  @update
-  Future<void> updateNote(Note note);
+  Future<Note?> getNoteById(int id) =>
+      (select(notes)
+        ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
 
-  @delete
-  Future<void> deleteNote(Note note);
+  Future<int> insertNote(NotesCompanion note) =>
+      into(notes).insert(note);
+
+  Future<bool> updateNote(Note note) =>
+      update(notes).replace(note);
+
+  Future<int> deleteNote(Note note) =>
+      delete(notes).delete(note);
 }

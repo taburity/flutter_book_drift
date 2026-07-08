@@ -1,12 +1,30 @@
-import 'dart:async';
-import 'package:floor/floor.dart';
-import 'package:sqflite/sqflite.dart' as sqflite;
-import 'note.dart';
+import 'dart:io';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'notes.dart';
 import 'notes_dao.dart';
 
 part 'notes_database.g.dart';
 
-@Database(version: 1, entities: [Note])
-abstract class NotesDatabase extends FloorDatabase {
-  NotesDao get notesDao;
+@DriftDatabase(
+  tables: [Notes],
+  daos: [NotesDao],
+)
+class NotesDatabase extends _$NotesDatabase {
+  NotesDatabase() : super(_openConnection());
+
+  @override
+  int get schemaVersion => 1;
+}
+
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(
+      p.join(dbFolder.path, 'notes.db'),
+    );
+    return NativeDatabase.createInBackground(file);
+  });
 }
